@@ -6,6 +6,11 @@ connect to. Then any time you try to access a web site, WarcReplay will send
 your browser the already archived contents of the website you are trying to
 access.
 
+Prerequisites
+=============
+WarcReplay requires the [Twisted networking library](http://twistedmatrix.com/trac/).
+The library can be installed by running `pip install twisted` or by installing
+binaries which are available on their website. 
 
 Usage
 =====
