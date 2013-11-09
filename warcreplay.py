@@ -6,68 +6,10 @@ import argparse
 from twisted.internet import reactor, protocol
 from twisted.web.client import _URI
 
-from hanzo.warctools import WarcRecord
 from hanzo.httptools import RequestMessage, ResponseMessage
 
 from TwistedWebProxyServer import WebProxyServerProtocol
-
-class MetaRecordInfo:
-    """
-    Stores information needed to retrieve a WARC Record
-    This functions similar to a CDX entry
-    """
-    def __init__(self, uri, offset, rtype, filename):
-        self.uri = uri
-        self.offset = offset
-        self.rtype = rtype
-        self.filename = filename
-        
-    def uriEquals(self, uri, ignoreScheme=False):
-        self_uri = _URI.fromBytes(self.uri)
-        comp_uri = _URI.fromBytes(uri)
-        if ignoreScheme:
-            self_uri.scheme = comp_uri.scheme = None
-        return self_uri.toBytes() == comp_uri.toBytes()
-        
-
-class WarcReplayHandler:
-    def __init__(self):
-        self.metaRecords = []
-        self.responseMetaRecords = []
-    
-    @staticmethod
-    def loadWarcFileRecords(name):
-        """ Generator function for records from the file 'name' """
-        f = WarcRecord.open_archive(name, gzip="auto")
-        for (offset, r, err) in f.read_records(limit=None):
-            if err:
-                print "warc errors at %s:%d" % (name, offset or 0)
-                for e in err:
-                    print '\t', e
-            if r:
-                yield (r, offset)
-        f.close()
-        
-    def loadWarcFile(self, name):
-        for r, off in self.loadWarcFileRecords(name):
-            i = MetaRecordInfo(r.url, off, r.type, name)
-            if r.type == WarcRecord.RESPONSE:
-                self.responseMetaRecords.append(i)
-            self.metaRecords.append(i)
-    
-    def recordFromUri(self, uri):
-        p = [m for m in self.responseMetaRecords if m.uriEquals(uri, ignoreScheme=True)]
-        if len(p) < 1:
-            return None
-        return self.readRecord(p[0].filename, p[0].offset)
-    
-    @staticmethod
-    def readRecord(filename, offset):
-        w = WarcRecord.open_archive(filename, offset=offset)
-        g = w.read_records(limit=1)
-        r = g.next()[1]
-        w.close()
-        return r
+from warcmanager import WarcReplayHandler
 
 def _copy_attrs(to, frum, attrs):
     map(lambda a: setattr(to, a, getattr(frum, a)), attrs)
@@ -134,13 +76,16 @@ class WarcReplayProtocol(WebProxyServerProtocol):
 class ReplayServerFactory(protocol.ServerFactory):
     protocol = WarcReplayProtocol
     
-    def __init__(self, warcFiles=[]):
-        self._wrp = WarcReplayHandler()
+    def __init__(self, warcFiles=[], wrp=None):
+        if wrp is not None:
+            self.wrp = wrp
+        else:
+            self.wrp = WarcReplayHandler()
         for n in warcFiles:
-            self._wrp.loadWarcFile(n)
+            self.wrp.loadWarcFile(n)
     
     def buildProtocol(self, addr):
-        p = self.protocol(self._wrp)
+        p = self.protocol(self.wrp)
         p.factory = self
         return p
 
