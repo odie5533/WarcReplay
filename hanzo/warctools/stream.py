@@ -4,7 +4,7 @@ import zlib
 import gzip
 import re
 
-from hanzo.warctools.archive_detect import is_gzip_file, guess_record_type
+from .archive_detect import is_gzip_file, guess_record_type
 
 def open_record_stream(record_class=None, filename=None, file_handle=None,
                        mode="rb+", gzip="auto", offset=None, length=None):

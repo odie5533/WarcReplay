@@ -2,8 +2,8 @@
 
 import re
 
-from hanzo.warctools.record import ArchiveRecord, ArchiveParser
-from hanzo.warctools.archive_detect import register_record_type
+from .record import ArchiveRecord, ArchiveParser
+from .archive_detect import register_record_type
 
 # URL<sp>IP-address<sp>Archive-date<sp>Content-type<sp>
 #Result-code<sp>Checksum<sp>Location<sp> Offset<sp>Filename<sp>

@@ -1,7 +1,7 @@
 
-from hanzo.warctools.record import ArchiveRecord, ArchiveParser
-from hanzo.warctools.warc import WarcParser
-from hanzo.warctools.arc import ArcParser
+from .record import ArchiveRecord, ArchiveParser
+from .warc import WarcParser
+from .arc import ArcParser
 
 
 class MixedRecord(ArchiveRecord):

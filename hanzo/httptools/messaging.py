@@ -18,7 +18,7 @@ class ParseError(StandardError):
     """Baseclass for all http parsing errors"""
     pass
 
-from hanzo.httptools.semantics import Codes, Methods
+from .semantics import Codes, Methods
 
 NEWLINES = ('\r\n', '\n')
 

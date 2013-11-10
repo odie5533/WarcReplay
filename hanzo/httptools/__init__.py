@@ -1,4 +1,4 @@
-from hanzo.httptools.messaging import RequestMessage, ResponseMessage, HTTP09Response
+from .messaging import RequestMessage, ResponseMessage, HTTP09Response
 
 
 __all__ = [
