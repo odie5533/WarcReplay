@@ -1,9 +1,12 @@
 # Copyright (c) 2013 David Bern
 
+import zlib
 
 from twisted.web.client import _URI
 
 from hanzo.warctools import WarcRecord
+from hanzo.httptools import RequestMessage, ResponseMessage
+
 
 def dump(record, content=True):
     """ Dumps a warctools WarcRecord to a string """
@@ -27,6 +30,7 @@ def dump(record, content=True):
         for e in record.errors:
             s += '\t%s\n' % str(e)
     return s
+
 
 class MetaRecordInfo(object):
     """
@@ -78,7 +82,8 @@ class WarcReplayHandler:
             self.metaRecords.append(i)
     
     def recordFromUri(self, uri):
-        p = [m for m in self.responseMetaRecords if m.uriEquals(uri, ignoreScheme=True)]
+        p = [m for m in self.responseMetaRecords
+             if m.uriEquals(uri, ignoreScheme=True)]
         if len(p) < 1:
             return None
         return self.readRecord(p[0].filename, p[0].offset)
@@ -90,3 +95,17 @@ class WarcReplayHandler:
         r = g.next()[1]
         w.close()
         return r
+
+    @staticmethod
+    def extractPayload(record):
+        m = ResponseMessage(RequestMessage())
+        m.feed(record.content[1])
+        m.close()
+        b = m.get_body()
+
+        z = zlib.decompressobj(16 + zlib.MAX_WBITS)
+        try:
+            b = z.decompress(b)
+        except zlib.error:
+            pass
+        return b
