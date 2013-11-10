@@ -1,5 +1,6 @@
 # Copyright (c) 2013 David Bern
 
+
 import zlib
 
 from twisted.web.client import _URI
@@ -9,7 +10,11 @@ from hanzo.httptools import RequestMessage, ResponseMessage
 
 
 def dump(record, content=True):
-    """ Dumps a warctools WarcRecord to a string """
+    """ Dumps a warctools WarcRecord to a string
+    :type content: bool
+    :type record: WarcRecord
+    :rtype : str
+    """
     s = 'Headers:\n'
     for (h, v) in record.headers:
         s += '\t%s:%s\n' % (h, v)
@@ -90,6 +95,11 @@ class WarcReplayHandler:
     
     @staticmethod
     def readRecord(filename, offset):
+        """
+        :type filename: str
+        :type offset: int
+        :rtype : WarcRecord
+        """
         w = WarcRecord.open_archive(filename, offset=offset)
         g = w.read_records(limit=1)
         r = g.next()[1]
@@ -98,6 +108,9 @@ class WarcReplayHandler:
 
     @staticmethod
     def extractPayload(record):
+        """
+        :type record: WarcRecord
+        """
         m = ResponseMessage(RequestMessage())
         m.feed(record.content[1])
         m.close()

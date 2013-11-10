@@ -23,6 +23,11 @@ class WarcReplayProtocol(WebProxyServerProtocol):
         
     @staticmethod
     def getRecordUri(request_uri, connect_uri):
+        """
+        :type request_uri: str
+        :type connect_uri: str
+        :return: str
+        """
         req_uri = _URI.fromBytes(request_uri)
         con_uri = _URI.fromBytes(connect_uri)
         # Remove default port from URL
@@ -61,6 +66,9 @@ class WarcReplayProtocol(WebProxyServerProtocol):
         t.write(b)
     
     def requestParsed(self, request):
+        """
+        Overrides WebProxyServerProtocol.requestParsed
+        """
         record_uri = self.getRecordUri(request.uri, self.connect_uri)
         #print "requestParsed:", record_uri
         r = self._wrp.recordFromUri(record_uri)
@@ -81,14 +89,8 @@ class ReplayServerFactory(protocol.ServerFactory):
     protocol = WarcReplayProtocol
     
     def __init__(self, warcFiles=None, wrp=None):
-        if wrp is not None:
-            self.wrp = wrp
-        else:
-            self.wrp = WarcReplayHandler()
-        if warcFiles is None:
-            warcFiles = []
-        for n in warcFiles:
-            self.wrp.loadWarcFile(n)
+        self.wrp = wrp or WarcReplayHandler()
+        map(self.wrp.loadWarcFile, warcFiles or [])
     
     def buildProtocol(self, addr):
         p = self.protocol(self.wrp)
