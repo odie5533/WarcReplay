@@ -37,7 +37,7 @@ class cdx_entry(object):
 
     def tostring(self, field_order):
         f = lambda n: getattr(self, CDX_MAPPING[n]) if n in CDX_MAPPING else '-'
-        return ' '.join([f(k) for k in field_order])
+        return ' '.join([f(k) or '-' for k in field_order])
 
 
 def field_order_tostring(field_order):
@@ -52,14 +52,14 @@ class cdx_reader(twisted.protocols.basic.LineOnlyReceiver):
     def parse_file(self, filename, use_gz=False):
         o = gzip.open if use_gz or filename.endswith('.gz') else open
         with o(filename, 'rb') as f:
-            map(self.lineReceived, f.readlines())
+            for l in f:
+                self.lineReceived(l)
+        return self.cdx_entries
 
     def lineReceived(self, line):
         line = line.strip()
         if self.field_order is None:
             self.field_order = self.parseFieldOrder(line)
-            if len(self.field_order) > len(set(self.field_order)):
-                print "CDX Header has duplicate keys"
         else:
             e = self.parseEntryLine(self.field_order, line)
             self.entryReceived(e)
